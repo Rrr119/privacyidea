@@ -54,6 +54,7 @@ class PolicyAction:
     MAXTOKENREALM = "max_token_per_realm"
     MAXTOKENUSER = "max_token_per_user"
     MAXACTIVETOKENUSER = "max_active_token_per_user"
+    TOKEN_LIFETIME = "token_lifetime"
     NODETAILSUCCESS = "no_detail_on_success"
     ADDUSERINRESPONSE = "add_user_in_response"
     ADDRESOLVERINRESPONSE = "add_resolver_in_response"

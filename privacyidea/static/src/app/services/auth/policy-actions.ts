@@ -79,6 +79,7 @@ export type PolicyAction =
   | "max_token_per_realm"
   | "max_token_per_user"
   | "max_active_token_per_user"
+  | "token_lifetime"
   | "no_detail_on_success"
   | "add_user_in_response"
   | "add_resolver_in_response"

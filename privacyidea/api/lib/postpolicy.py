@@ -73,6 +73,7 @@ from privacyidea.lib.subscriptions import (subscription_status,
                                            get_subscription,
                                            EXPIRE_MESSAGE)
 from privacyidea.lib.token import get_tokens, assign_token, get_one_token, init_token
+from privacyidea.lib.token.lifetime import apply_token_lifetime_policy
 from privacyidea.lib.tokenclass import ChallengeSession
 from privacyidea.lib.tokenrolloutstate import RolloutState
 from privacyidea.lib.tokens.passkeytoken import PasskeyTokenClass
@@ -1353,4 +1354,31 @@ def check_verify_enrollment(request, response):
     else:
         log.warning("No distinct token object found in enrollment response!")
 
+    return response
+
+
+def enroll_token_lifetime(request, response):
+    """
+    Apply the organization (realm) scoped ``token_lifetime`` enrollment policy
+    to a freshly created token.
+
+    The policy is matched after the token exists so that its assigned realms
+    are known. Tokens enrolled without a matching policy are left untouched,
+    which keeps the behavior of existing API clients unchanged.
+
+    :param request: the API request
+    :param response: the API response of ``/token/init``
+    :return: the unchanged response
+    """
+    serial = response.json.get("detail", {}).get("serial")
+    if not serial:
+        log.debug("No serial in token init response, skipping token lifetime "
+                  "policy.")
+        return response
+    token = get_one_token(serial=serial, silent_fail=True)
+    if token is None:
+        log.warning(f"Token {serial} from init response not found, can not "
+                    f"apply token lifetime policy.")
+        return response
+    apply_token_lifetime_policy(token, g, user_object=request.User)
     return response

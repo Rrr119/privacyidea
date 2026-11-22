@@ -84,6 +84,19 @@ from privacyidea.lib.token.lifecycle import (  # noqa: F401
     copy_token_realms,
     lost_token,
 )
+from privacyidea.lib.token.lifetime import (  # noqa: F401
+    TOKEN_LIFETIME_KEY,
+    LIFECYCLE_STATE_KEY,
+    LifecycleState,
+    get_token_lifetime_policy,
+    apply_token_lifetime_policy,
+    get_lifecycle_state,
+    set_lifecycle_state,
+    get_expiry_date,
+    is_token_expired,
+    mark_expired_tokens,
+    renew_token,
+)
 from privacyidea.lib.token.auth import (  # noqa: F401
     check_realm_pass,
     check_serial_pass,

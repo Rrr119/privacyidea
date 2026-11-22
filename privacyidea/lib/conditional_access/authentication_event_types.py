@@ -232,6 +232,8 @@ class AuthEventReason(StrEnum):
     TOKEN_AUTH_COUNTER_EXCEEDED = "TOKEN_AUTH_COUNTER_EXCEEDED"
     # Now is outside the token's validity period.
     TOKEN_OUTSIDE_VALIDITY_PERIOD = "TOKEN_OUTSIDE_VALIDITY_PERIOD"
+    # The token lifetime enforced by the organization (realm) policy has elapsed.
+    TOKEN_LIFETIME_EXPIRED = "TOKEN_LIFETIME_EXPIRED"
     # The token's enrollment was never completed (rollout state clientwait / verify_pending).
     TOKEN_NOT_YET_ENROLLED = "TOKEN_NOT_YET_ENROLLED"
     # A policy disabled this token's whole type for the request (PolicyAction.DISABLED_TOKEN_TYPES).

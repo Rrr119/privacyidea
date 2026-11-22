@@ -62,7 +62,7 @@ from werkzeug.datastructures import FileStorage
 
 from privacyidea.api.auth import admin_required
 from privacyidea.api.lib.postpolicy import (save_pin_change, check_verify_enrollment,
-                                            postpolicy)
+                                            enroll_token_lifetime, postpolicy)
 from privacyidea.api.lib.prepolicy import (prepolicy, check_base_action, check_token_action,
                                            check_copy_token_action,
                                            check_token_init, check_token_upload,
@@ -118,6 +118,8 @@ from ..lib.token import (init_token, get_tokens_paginate, assign_token,
                          set_validity_period_end, set_validity_period_start, add_tokeninfo,
                          delete_tokeninfo, import_token, set_token_type_info, get_settable_tokeninfo_keys,
                          assign_tokengroup, unassign_tokengroup, set_tokengroups, get_one_token)
+from ..lib.token.lifetime import (TOKEN_LIFETIME_KEY, get_lifecycle_state,
+                                  get_expiry_date, is_token_expired, renew_token)
 from ..lib.tokens.passkeytoken import PasskeyTokenClass
 from ..lib.tokens.webauthntoken import WebAuthnTokenClass
 from ..lib.policydecorators import check_admin_allowed_for_token_owner
@@ -193,6 +195,7 @@ overall policy concept.
 @postpolicy(save_pin_change, request)
 @event("token_init", request, g)
 @postpolicy(check_verify_enrollment, request)
+@postpolicy(enroll_token_lifetime, request)
 @CheckSubscription(request)
 @log_with(log, log_entry=False)
 def init():
@@ -1017,6 +1020,66 @@ def disable_api(serial=None):
     res = enable_token(serial, enable=False, user=user)
     g.audit_object.log({"success": True})
     return send_result(res)
+
+
+@token_blueprint.route('/lifecycle/<serial>', methods=['GET'])
+@admin_required
+@prepolicy(check_token_action, request, action=PolicyAction.TOKENLIST)
+@log_with(log)
+def get_lifecycle_api(serial):
+    """
+    Return the lifecycle information of a single token.
+
+    The information is derived from the token's tokeninfo entries, so the
+    response shape stays available through the generic ``GET /token/``
+    endpoint as well - this endpoint is a focused convenience view.
+
+    Requires admin authentication and the policy action ``tokenlist``.
+
+    :param serial: the token serial.
+    :status 200: a dictionary with ``serial``, ``lifecycle_state``,
+        ``token_lifetime`` and ``expiry_date`` (``null`` when the token
+        has no lifetime policy).
+    """
+    g.audit_object.log({"serial": serial})
+    token = get_one_token(serial=serial)
+    expiry = get_expiry_date(token)
+    result = {
+        "serial": serial,
+        "lifecycle_state": get_lifecycle_state(token),
+        "token_lifetime": token.get_tokeninfo(TOKEN_LIFETIME_KEY),
+        "expiry_date": expiry.isoformat() if expiry else None,
+        "expired": is_token_expired(token),
+    }
+    g.audit_object.log({"success": True})
+    return send_result(result)
+
+
+@token_blueprint.route('/lifecycle/renew/<serial>', methods=['POST'])
+@admin_required
+@prepolicy(check_token_action, request, action=PolicyAction.SET)
+@event("token_renew", request, g)
+@log_with(log)
+def renew_lifecycle_api(serial):
+    """
+    Renew a token whose organization policy driven lifetime has elapsed.
+
+    Renewal restarts the lifetime from now without changing the token's
+    secret, PIN or serial, so existing enrollments keep working. An optional
+    ``lifetime`` parameter overrides the recorded lifetime.
+
+    Requires admin authentication and the policy action ``set``.
+
+    :param serial: the token serial.
+    :jsonparam lifetime: optional new lifetime string, e.g. ``"90d"``.
+    :status 200: the new expiry date as an ISO 8601 string.
+    """
+    g.audit_object.log({"serial": serial})
+    token = get_one_token(serial=serial)
+    lifetime = get_optional(request.all_data, "lifetime")
+    new_expiry = renew_token(token, lifetime=lifetime)
+    g.audit_object.log({"success": True})
+    return send_result(new_expiry.isoformat())
 
 
 @token_blueprint.route('/', methods=['DELETE'])

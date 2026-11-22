@@ -2584,6 +2584,14 @@ def get_static_policy_definitions(scope=None):
                 'type': 'int',
                 'desc': _('Limit the number of allowed tokens in a realm.'),
                 'group': GROUP.TOKEN},
+            PolicyAction.TOKEN_LIFETIME: {
+                'type': TYPE.STRING,
+                'desc': _('Set the lifetime of tokens enrolled in this realm, '
+                          'e.g. "90d" or "12h". After the lifetime has elapsed '
+                          'the token is marked expired and can no longer be used '
+                          'for authentication. The policy is matched per '
+                          'organization (realm).'),
+                'group': GROUP.TOKEN},
             PolicyAction.REQUIRE_DESCRIPTION: {
                 'type': 'str',
                 'desc': _('During the rollout process, this policy makes the '

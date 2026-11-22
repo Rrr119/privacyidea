@@ -56,6 +56,33 @@ allowed to have assigned.
    allowed number of tokens among the matching policies is enforced.
    Policy priorities are ignored.
 
+.. _policy_token_lifetime:
+
+token_lifetime
+~~~~~~~~~~~~~~
+
+type: ``string``
+
+Set the lifetime of tokens enrolled in the selected realm, i.e. of the
+organization the policy is attached to. The value is a duration such as
+``90d``, ``12h`` or ``30m`` (allowed units are ``s``, ``m``, ``h``, ``d``
+and ``y``).
+
+The lifetime is recorded on every token enrolled while the policy is active.
+Once it has elapsed, the token is moved to the ``expired`` lifecycle state
+and can no longer be used for authentication - the authentication request
+fails with the ``TOKEN_LIFETIME_EXPIRED`` reason. An administrator can renew
+an expired token through ``POST /token/lifecycle/renew/<serial>`` without
+changing its secret, PIN or serial, and inspect its state through
+``GET /token/lifecycle/<serial>``.
+
+Realms act as the tenant boundary, so each organization can define its own
+lifetime. Tokens in a realm without this policy never expire through it and
+keep their previous behavior.
+
+.. note:: If there are multiple matching policies, the *shortest* lifetime
+   among the matching policies is enforced.
+
 max_active_token_per_user
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 

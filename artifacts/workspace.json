@@ -1,0 +1,17 @@
+{
+  "root": "/home/dev/feedback/uid34520",
+  "B": "/home/dev/feedback/uid34520",
+  "sha": "6862ae3ee20d41fc2f0f7d9f6ecd7e25e3e0259e",
+  "wslDistro": "Ubuntu-26.04",
+  "source": {
+    "owner": "privacyidea",
+    "repo": "privacyidea",
+    "sha": "6862ae3ee20d41fc2f0f7d9f6ecd7e25e3e0259e"
+  },
+  "fork": {
+    "owner": "Rrr119",
+    "repo": "privacyidea",
+    "cloneUrl": "https://github.com/Rrr119/privacyidea.git"
+  },
+  "at": "2026-11-22T21:27:01.653Z"
+}

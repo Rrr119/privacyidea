@@ -182,9 +182,11 @@ class TokenClass:
         "hashlib",
         "import_date",
         PolicyAction.LASTAUTH,
+        "lifecycle_state",
         "next_password_change",
         "next_pin_change",
         "tokenkind",
+        "token_lifetime",
         "validity_period_end",
         "validity_period_start",
     })
@@ -1659,6 +1661,23 @@ class TokenClass:
 
         return True
 
+    def check_token_lifetime(self):
+        """
+        Check the organization (realm) policy driven token lifetime.
+
+        Tokens without a ``token_lifetime`` tokeninfo entry always pass, so
+        tokens enrolled before the lifecycle policy was introduced keep their
+        old behavior.
+
+        :return: True if the token is within its lifetime, False if it expired
+        :rtype: bool
+        """
+        # Imported locally: privacyidea.lib.token imports the token classes, so a
+        # module-level import would be circular.
+        from privacyidea.lib.token.lifetime import is_token_expired
+
+        return not is_token_expired(self)
+
     def check_all(self, message_list):
         """
         Perform all checks on the token. Returns False if the token is either:
@@ -1686,6 +1705,8 @@ class TokenClass:
             (self.check_failcount, "Failcounter exceeded", AuthEventReason.TOKEN_FAILCOUNT_EXCEEDED),
             (self.check_validity_period, "Outside validity period",
              AuthEventReason.TOKEN_OUTSIDE_VALIDITY_PERIOD),
+            (self.check_token_lifetime, "Token lifetime exceeded",
+             AuthEventReason.TOKEN_LIFETIME_EXPIRED),
             (lambda: self.rollout_state not in [RolloutState.CLIENTWAIT, RolloutState.VERIFY_PENDING],
              "Token is not yet enrolled", AuthEventReason.TOKEN_NOT_YET_ENROLLED),
         )
